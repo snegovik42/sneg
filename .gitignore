@@ -1,0 +1,18 @@
+# --- сборки (в репозиторий не нужны, они в релизах) ---
+dist/
+build/
+build_tcl/
+
+# --- мусор Python ---
+__pycache__/
+*.pyc
+*.pyo
+
+# --- результаты работы sneg ---
+*.snegc
+sneg-log.txt
+
+# --- редакторы ---
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,72 @@
+# Мини-бекенд на sneg
+# Роутер — таблица из «метод + путь» в функции-обработчики.
+# Так же устроены и настоящие веб-фреймворки, только без сокетов.
+
+let пользователи = [
+    { id: 1, имя: "sneg", баланс: 1000 },
+    { id: 2, имя: "mark", баланс: 250 }
+]
+
+fn найти(id) {
+    for u in пользователи {
+        if u.id == id {
+            return u
+        }
+    }
+    return nil
+}
+
+fn ответ(status, body) {
+    return { status: status, body: body }
+}
+
+let routes = {
+    "GET /users": fn (req) {
+        return ответ(200, пользователи)
+    },
+
+    "GET /user": fn (req) {
+        let u = найти(req.id)
+        if u == nil {
+            return ответ(404, { error: "пользователь не найден" })
+        }
+        return ответ(200, u)
+    },
+
+    "POST /deposit": fn (req) {
+        let u = найти(req.id)
+        if u == nil {
+            return ответ(404, { error: "пользователь не найден" })
+        }
+        if req.amount <= 0 {
+            return ответ(400, { error: "сумма должна быть больше нуля" })
+        }
+        u.баланс += req.amount
+        return ответ(200, { id: u.id, баланс: u.баланс })
+    }
+}
+
+fn handle(req) {
+    let key = req.method + " " + req.path
+    if not has(routes, key) {
+        return ответ(404, { error: "нет такого маршрута: " + key })
+    }
+    return routes[key](req)
+}
+
+fn show(res) {
+    print(res.status, "->", res.body)
+}
+
+# --- запросы, как будто они пришли от клиента ---
+
+show(handle({ method: "GET", path: "/users" }))
+show(handle({ method: "GET", path: "/user", id: 2 }))
+show(handle({ method: "GET", path: "/user", id: 99 }))
+show(handle({ method: "POST", path: "/deposit", id: 1, amount: 500 }))
+show(handle({ method: "POST", path: "/deposit", id: 1, amount: -10 }))
+show(handle({ method: "DELETE", path: "/users" }))
+
+# данные изменились — состояние живёт между запросами
+print()
+print("После депозита:", найти(1))
